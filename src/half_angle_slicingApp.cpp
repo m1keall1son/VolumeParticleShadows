@@ -7,16 +7,17 @@
 #include "cinder/Log.h"
 #include "cinder/gl/Batch.h"
 #include "cinder/Rand.h"
+#include "cinder/CameraUi.h"
 
 using namespace ci;
 using namespace ci::app;
 using namespace std;
 
-const int   PARTICLES = 256; //squared
+const int   PARTICLES = 128; //squared
 const float PRESIMULATION_DELTA_TIME = 0.1;
 const int   BASE_LIFETIME = 2;
 const float MAX_DELTA_TIME = 0.2;
-const int   SLICES = 128;
+const int   SLICES = 64;
 const int   OPACITY_TEXTURE_RESOLUTION = 1024;
 
 gl::GlslProgRef loadShader( const std::string& filename )
@@ -36,6 +37,7 @@ class half_angle_slicingApp : public App {
 public:
     void setup() override;
     void mouseDown( MouseEvent event ) override;
+    void mouseMove(MouseEvent event)override;
     void update() override;
     void draw() override;
     
@@ -45,6 +47,7 @@ public:
     gl::TextureRef  mSpawnTexture;
     
     CameraPersp     mCamera;
+    CameraUi        mUI;
     
     int mCurrent = 0;
     int mMaxParticleCount = PARTICLES * PARTICLES;
@@ -62,6 +65,7 @@ public:
     int mSortStage = -1;
 
     bool mFlipped = false;
+    vec2 mMouse;
     
     CameraOrtho mLightCamera;
     
@@ -109,19 +113,25 @@ void half_angle_slicingApp::setup()
     
     vector<vec4> positions;
     vector<vec2> texCoords;
-    vector<vec4> spawn;
+    vector<vec4> spawn, start;
+    
+    float step = 3./(PARTICLES*PARTICLES);
+    float life = 0.;
     
     for( int y = 0; y < PARTICLES; y++ ){
         for( int x = 0; x < PARTICLES; x++ ){
             
-            auto sphere_pt = randVec3f();
+            auto sphere_pt = randVec3();
             
             auto tc = vec2( (x + 0.5) / PARTICLES, (y + 0.5) / PARTICLES );
-            auto spawndata = vec4( sphere_pt*.1f, (float)BASE_LIFETIME + randFloat() * 2.f );
+            auto spawndata = vec4( sphere_pt*.1f, life );
             
             spawn.push_back(spawndata);
-            positions.push_back(vec4(tc,0.,1.));
+            start.push_back(vec4(-100,-100,-100, life));
+            positions.push_back(spawndata);
             texCoords.push_back(tc);
+            
+            life += step;
             
         }
     }
@@ -146,14 +156,26 @@ void half_angle_slicingApp::setup()
     mVertices = gl::Batch::create( mesh, mRenderShader);
 
     mSpawnTexture = gl::Texture::create( Surface32f( (float*)spawn.data(), PARTICLES, PARTICLES, sizeof(vec4)*PARTICLES, SurfaceChannelOrder::RGBA ), fmt );
+    auto start_tex = gl::Texture::create( Surface32f( (float*)start.data(), PARTICLES, PARTICLES, sizeof(vec4)*PARTICLES, SurfaceChannelOrder::RGBA ), fmt );
+
+    {
+        gl::ScopedFramebuffer bind(mSimulationFbo[0]);
+        gl::ScopedMatrices push;
+        gl::setMatricesWindow( mSimulationFbo[0]->getSize() );
+        gl::ScopedViewport view(vec2(0), mSimulationFbo[0]->getSize());
+        gl::draw(start_tex);
+    }
     
     mCamera.setPerspective(60, getWindowAspectRatio(), .1, 10000);
     mCamera.lookAt(vec3(-1,0,.5),vec3(0));
     
+    mUI.setCamera(&mCamera);
+    mUI.connect(getWindow());
+    
     mLightCamera.setOrtho(-5.0, 5.0, -5.0, 5.0, -50.0, 50.0);
    // mLightCamera.setViewDirection(vec3(0,-1,0));
     //mLightCamera.setWorldUp(vec3(0,1,0));
-    mLightCamera.lookAt(vec3(0,5,0), vec3(0,0,0));
+    mLightCamera.lookAt(vec3(2,5,2), vec3(0,0,0));
     
     
     mFullScreen = gl::Batch::create(geom::Plane().size(getWindowSize()).origin(vec3(getWindowCenter(),0.)).normal(vec3(0,0,1)), mBackgroundShader);
@@ -172,9 +194,18 @@ void half_angle_slicingApp::mouseDown( MouseEvent event )
 {
 }
 
+void half_angle_slicingApp::mouseMove( MouseEvent event )
+{
+    mMouse = vec2(event.getPos());
+    
+    mMouse.x = lmap(mMouse.x, 0.f, float(getWindowWidth()), -0.3f, .3f);
+    mMouse.y = lmap(mMouse.y, 0.f, float(getWindowHeight()), -.3f, .3f);
+
+}
+
 void half_angle_slicingApp::update()
 {
-    mCamera.lookAt( vec3( cos(getElapsedSeconds()*.5)+.5, 0., sin(getElapsedSeconds()*.5)  ), vec3(.5, 0,0) );
+    //mCamera.lookAt( vec3( cos(getElapsedSeconds()*.5)+.5, 0., sin(getElapsedSeconds()*.5)  ), vec3(.5, 0,0) );
    // mLightCamera.lookAt(vec3(sin(getElapsedSeconds()), sin(getElapsedSeconds()*.5)*5., cos(getElapsedSeconds()*.5)*5.),vec3(0), vec3(0,1,0));
 
     gl::disableAlphaBlending();
@@ -228,20 +259,23 @@ void half_angle_slicingApp::update()
         gl::ScopedTextureBind prevPositions( mSimulationFbo[1-mCurrent]->getColorTexture(), 0 );
         gl::ScopedTextureBind spawnTex( mSpawnTexture, 1 );
         
-        for (int i = 0; i < (mFirstFrame ? BASE_LIFETIME / PRESIMULATION_DELTA_TIME : 1); ++i) {
+        for (int i = 0; i < (1); ++i) {
             
             auto glsl = mParticleQuad->getGlslProg();
             
             glsl->uniform( "uResolution", vec2(PARTICLES) );
-            glsl->uniform( "uDeltaTime", mFirstFrame ? PRESIMULATION_DELTA_TIME : mDeltaTime * mInitialSpeed );
-            glsl->uniform( "uTime", mFirstFrame ? PRESIMULATION_DELTA_TIME : (float)getElapsedSeconds() );
+            glsl->uniform( "uDeltaTime", mDeltaTime  );
+            glsl->uniform( "uTime", (float)getElapsedSeconds() );
             glsl->uniform( "uParticleTexture", 0);
             glsl->uniform( "uSpawnTexture", 1);
             glsl->uniform( "uPersistence", mInitialTurbulance );
+            glsl->uniform( "uMouse", mMouse );
             
             mParticleQuad->draw();
         }
     }
+    
+    if(mFirstFrame)flippedThisFrame = true;
     
     mFirstFrame = false;
     
@@ -256,7 +290,7 @@ void half_angle_slicingApp::update()
     
     {
         
-        for (int i = 0; i < ( mTotalSortSteps ); ++i) {
+        for (int i = 0; i < (flippedThisFrame ? mTotalSortSteps : 50); ++i) {
             
             mCurrent = 1 - mCurrent;
             
@@ -403,6 +437,7 @@ void half_angle_slicingApp::draw()
 
         mFullScreen->draw();
     }
+     
 
     
 }

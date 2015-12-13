@@ -10,6 +10,8 @@ uniform float uTime;
 
 uniform float uPersistence;
 
+uniform vec2 uMouse;
+
 const int OCTAVES =  3;
 
 vec4 mod289(vec4 x) {
@@ -131,9 +133,9 @@ void main () {
     
     vec3 oldPosition = data.rgb;
     
-    vec3 noisePosition = oldPosition *  1.5; //noise position scale
+    vec3 noisePosition = oldPosition *  .5; //noise position scale
     
-    float noiseTime = uTime;// * (1./4000.) ; //noise time scale
+    float noiseTime = uTime*.01;// * (1./4000.) ; //noise time scale
     
     vec4 xNoisePotentialDerivatives = vec4(0.0);
     vec4 yNoisePotentialDerivatives = vec4(0.0);
@@ -164,19 +166,19 @@ void main () {
                               yNoisePotentialDerivatives[0] - xNoisePotentialDerivatives[1]
                               ) * .075; //noise scale
     
-    vec3 velocity = vec3( .2 , 0.0, 0.0); //base speed in x axis
+    vec3 velocity = vec3( .0 , 0.0, 0.0); //base speed in x axis
     vec3 totalVelocity = velocity + noiseVelocity;
     
     vec3 newPosition = oldPosition + totalVelocity * uDeltaTime;
     
     float oldLifetime = data.a;
-    float newLifetime = oldLifetime - uDeltaTime;
+    float newLifetime = oldLifetime - (1./60.);
     
     vec4 spawnData = texture(uSpawnTexture, vTexCoord0);
     
     if (newLifetime < 0.0) {
-        newPosition = spawnData.rgb;
-        newLifetime = spawnData.a + newLifetime;
+        newPosition = vec3(uMouse, 0. )+spawnData.xyz*.1;
+        newLifetime = 3.;
     }
     
     FragColor = vec4(newPosition, newLifetime);

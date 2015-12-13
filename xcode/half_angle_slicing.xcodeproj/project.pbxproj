@@ -22,6 +22,7 @@
 		4F39F2361AE195A500893F62 /* sort.vert in Resources */ = {isa = PBXBuildFile; fileRef = 4F39F2341AE195A500893F62 /* sort.vert */; };
 		4F39F2391AE1972C00893F62 /* opacity.frag in Resources */ = {isa = PBXBuildFile; fileRef = 4F39F2371AE1972B00893F62 /* opacity.frag */; };
 		4F39F23A1AE1972C00893F62 /* opacity.vert in Resources */ = {isa = PBXBuildFile; fileRef = 4F39F2381AE1972C00893F62 /* opacity.vert */; };
+		4F66DC4C1BF9394900706D85 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F66DC4B1BF9394900706D85 /* IOKit.framework */; };
 		4FA822491AE5748E001E8626 /* floor.frag in Resources */ = {isa = PBXBuildFile; fileRef = 4FA822451AE5748E001E8626 /* floor.frag */; };
 		4FA8224A1AE5748E001E8626 /* floor.vert in Resources */ = {isa = PBXBuildFile; fileRef = 4FA822461AE5748E001E8626 /* floor.vert */; };
 		4FE643951AF0836F00EF74D4 /* background.frag in Resources */ = {isa = PBXBuildFile; fileRef = 4FE643931AF0836F00EF74D4 /* background.frag */; };
@@ -53,6 +54,7 @@
 		4F39F2341AE195A500893F62 /* sort.vert */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; name = sort.vert; path = ../assets/sort.vert; sourceTree = "<group>"; };
 		4F39F2371AE1972B00893F62 /* opacity.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; name = opacity.frag; path = ../assets/opacity.frag; sourceTree = "<group>"; };
 		4F39F2381AE1972C00893F62 /* opacity.vert */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; name = opacity.vert; path = ../assets/opacity.vert; sourceTree = "<group>"; };
+		4F66DC4B1BF9394900706D85 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
 		4FA822451AE5748E001E8626 /* floor.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; name = floor.frag; path = ../../volumetricParticleShadows/assets/floor.frag; sourceTree = "<group>"; };
 		4FA822461AE5748E001E8626 /* floor.vert */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; name = floor.vert; path = ../../volumetricParticleShadows/assets/floor.vert; sourceTree = "<group>"; };
 		4FE643931AF0836F00EF74D4 /* background.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; name = background.frag; path = ../assets/background.frag; sourceTree = "<group>"; };
@@ -71,6 +73,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4F66DC4C1BF9394900706D85 /* IOKit.framework in Frameworks */,
 				006D720419952D00008149E2 /* AVFoundation.framework in Frameworks */,
 				006D720519952D00008149E2 /* CoreMedia.framework in Frameworks */,
 				8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */,
@@ -182,6 +185,7 @@
 		29B97323FDCFA39411CA2CEA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				4F66DC4B1BF9394900706D85 /* IOKit.framework */,
 				1058C7A0FEA54F0111CA2CBB /* Linked Frameworks */,
 				1058C7A2FEA54F0111CA2CBB /* Other Frameworks */,
 			);
@@ -273,6 +277,7 @@
 		C01FCF4B08A954540054247B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CINDER_PATH = ../../../cinder;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				DEAD_CODE_STRIPPING = YES;
@@ -286,6 +291,7 @@
 					"$(inherited)",
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = "\"$(CINDER_PATH)/include\"";
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Applications";
 				OTHER_LDFLAGS = "\"$(CINDER_PATH)/lib/libcinder_d.a\"";
@@ -298,6 +304,7 @@
 		C01FCF4C08A954540054247B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CINDER_PATH = ../../../cinder;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
@@ -312,6 +319,7 @@
 					"$(inherited)",
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = "\"$(CINDER_PATH)/include\"";
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Applications";
 				OTHER_LDFLAGS = "\"$(CINDER_PATH)/lib/libcinder.a\"";
