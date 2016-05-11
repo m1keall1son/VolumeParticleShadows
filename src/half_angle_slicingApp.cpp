@@ -114,7 +114,7 @@ void half_angle_slicingApp::setup()
     for( int y = 0; y < PARTICLES; y++ ){
         for( int x = 0; x < PARTICLES; x++ ){
             
-            auto sphere_pt = randVec3f();
+            auto sphere_pt = randVec3();
             
             auto tc = vec2( (x + 0.5) / PARTICLES, (y + 0.5) / PARTICLES );
             auto spawndata = vec4( sphere_pt*.1f, (float)BASE_LIFETIME + randFloat() * 2.f );
